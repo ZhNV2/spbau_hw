@@ -43,6 +43,8 @@ def knn_for_one(X_train, y_train, k, dist, pos):
 	return knn(X_train_, y_train_, [X_train[pos]], k, dist)
 
 def loocv(X_train, y_train, dist):
+	for k in range(1, len(X_train) - 1):
+		print(k, sum([knn_for_one(X_train, y_train, k, dist, i)[0] != y_train[i] for i in range(len(X_train))]))
 	return min(range(1, len(X_train) - 1), key=lambda k:
 		sum([knn_for_one(X_train, y_train, k, dist, i)[0] != y_train[i] for i in range(len(X_train))]))
 
