@@ -1,30 +1,51 @@
 import random
+import sys
 
-INPUT_FILE_NAME = 'input'
 
-def read():
+EPS = 1e-12
+
+def terminate(msg):
+	print('program finished with error:')
+	print(msg)
+	exit()
+
+
+def read(filename):
 	lines = []
-	with open(INPUT_FILE_NAME) as input_data_file:
+	with open(filename) as input_data_file:
 		lines = input_data_file.readlines()
-	n = len(lines)
-	A = []
+	
+	M = []
 	for line in lines:
-		A.append(list(map(float, line.split())))
-	return n, A
+		M.append(list(map(float, line.split())))
+	x0 = M.pop()
+	xs = M.pop()
+	n = []
+	A = []
+	pos = 0
+	while pos < len(M):
+		cur_n = 0
+		while pos + cur_n < len(M) and abs(M[pos][pos + cur_n]) > EPS:
+			cur_n += 1
+		cur_A = [[M[pos + i][pos + j] for j in range(cur_n)] for i in range(cur_n)]
+		n.append(cur_n)
+		A.append(cur_A)
+		pos += cur_n
+	x_0 = []
+	x_s = []
+	sum = 0
+	for i in range(len(n)):
+		x_0.append(x0[sum : sum + n[i]])
+		x_s.append(xs[sum : sum + n[i]])
+		sum += n[i]
+	return n, A, x_s, x_0
 
-def e(n):
-	return [[1 if i == j else 0 for j in range(n)] for i in range(n)]
+def concat(lst):
+	return sum(lst, [])
 
 def norm(n, x_1, x_2):
-	return sum([(x_1[i] - x_2[i]) ** 2 for i in range(n)]) ** 0.5
-
-def mul(n, a, b):
-	c = [[0 for j in range(n)] for i in range(n)]
-	for i in range(n):
-		for j in range(n):
-			for k in range(n):
-				c[i][j] += a[i][k] * b[k][j]
-	return c
+	N, x1, x2 = sum(n), concat(x_1), concat(x_2)
+	return sum([(x1[i] - x2[i]) ** 2 for i in range(N)]) ** 0.5
 
 def mul_v(n, a, x):
 	y = [0 for i in range(n)]
@@ -34,28 +55,23 @@ def mul_v(n, a, x):
 	return y
 
 
-def seidel(n, A, x_s, x_0, eps):
-	E = e(n)
-	A_l = [[A[i][j] if i > j else 0 for j in range(n)] for i in range(n)]
-	D = [[1. / A[i][j] if i == j else 0 for j in range(n)] for i in range(n)]
-	A_u = [[A[i][j] if i < j else 0 for j in range(n)] for i in range(n)]
-
-	K = mul(n, D, A_l)
-	K = [[-K[i][j] for j in range(n)] for i in range(n)]
-	L = mul(n, D, A_u)
-	L = [[-L[i][j] for j in range(n)] for i in range(n)]
-	b = mul_v(n, A, x_s)
-	g = mul_v(n, D, b)
-
+def seidel(n, A, x_s, x_0, eps, full_mode):
+	N = len(n)
+	b = [mul_v(n[i], A[i], x_s[i]) for i in range(N)]
 	k = 0
 	while True:
-		x_1 = [0] * n
-		for i in range(n):
-			for j in range(n):
-				x_1[i] += K[i][j] * x_1[j]
-			for j in range(n):
-				x_1[i] += L[i][j] * x_0[j]
-			x_1[i] += g[i]
+		x_1 = [0] * N
+		if full_mode:
+			print('------ x[%d] = -----' % k)
+			print(concat(x_0))
+		for num in range(N):
+			x_1[num] = [0] * n[num]
+			for i in range(n[num]):
+				for j in range(i):
+					x_1[num][i] -= 1.0 * A[num][i][j] / A[num][i][i] * x_1[num][j]
+				for j in range(i + 1, n[num]):
+					x_1[num][i] -= 1.0 * A[num][i][j] / A[num][i][i] * x_0[num][j]
+				x_1[num][i] += 1.0 * b[num][i] / A[num][i][i]
 		if norm(n, x_0, x_1) < eps:
 			return x_1, k
 		x_0 = x_1
@@ -68,35 +84,69 @@ def g(x, A, b, n):
 	t = mul_v(n, A, x)
 	return [t[i] - b[i] for i in range(n)]
 
-def grad(n, A, x_s, x_0, eps):
-	b = mul_v(n, A, x_s)
+def grad(n, A, x_s, x_0, eps, full_mode):
+	N = len(n)
+	b = [mul_v(n[i], A[i], x_s[i]) for i in range(N)]
 	k = 0
-	g_0 = g(x_0, A, b, n)
+	g_0 = [g(x_0[i], A[i], b[i], n[i]) for i in range(N)]
 	while True:
-		alp = scalar(n, g_0, g_0) / 2. / scalar(n, mul_v(n, A, g_0), g_0)
-		x_1 = [x_0[i] - alp * g_0[i] for i in range(n)]
+		alp = []
+		if full_mode:
+			print('------ x[%d] = -----' % k)
+			print(concat(x_0))
+			print('------ gradient[%d] = -----' %k)
+			print(concat(g_0))
+		for i in range(N):
+			if scalar(n[i], g_0[i], g_0[i]) < EPS:
+				alp.append(1)
+			else:
+				alp.append(scalar(n[i], g_0[i], g_0[i]) / 2. / scalar(n[i], mul_v(n[i], A[i], g_0[i]), g_0[i]))
+		x_1 = [[x_0[i][j] - alp[i] * g_0[i][j] for j in range(n[i])] for i in range(N)]
 		if norm(n, x_0, x_1) < eps:
 			return x_1, k
 		x_0 = x_1
-		g_0 = g(x_0, A, b, n)
+		g_0 = [g(x_0[i], A[i], b[i], n[i]) for i in range(N)]
 		k = k + 1
 
 
-def main():
-	n, A = read()
-	x_s = [1, -2, 3, -8, -6]
-	x_0 = [-8, -6, -4, 4, -5]
-	eps = 0.1
-	x_seidel, k_seidel = seidel(n, A, x_s, x_0, eps)
-	x_grad, k_grad =grad(n, A, x_s, x_0, eps)
-	print('seidel')
-	print(x_seidel)
-	print(k_seidel)
-	print('grad')
-	print(x_grad)
-	print(k_grad)
+if len(sys.argv) < 2:
+	terminate('specify input file as first arg')
+filename = sys.argv[1]
+full_mode, method, eps = False, 'seidel', 0.001
+for arg in sys.argv[2:]:
+	if arg == '--full':
+		full_mode = True
+	elif arg.startswith('--method='):
+		method = arg[9:]
+	elif arg.startswith('--eps='):
+		eps = float(arg[6:])
+	else:
+		terminate('unexpected arg was specified')
 
+n, A, x_s, x_0 = read(filename)
 
-main()
+if full_mode:
+	print('---- initial n -----')
+	print(n)
+	print('---- initial A -----')
+	print(A)
+	print('---- initial x_s -----')
+	print(x_s)
+	print('---- initial x_0 -----')
+	print(x_0)
+
+if method == 'seidel':
+	x, k = seidel(n, A, x_s, x_0, eps, full_mode)
+elif method == 'grad':
+	x, k = grad(n, A, x_s, x_0, eps, full_mode)
+else:
+	terminate('unknown method, use seidel or grad')
+
+print('---- given solution x* ------')
+print(concat(x_s))
+print('---- given start x0 ------')
+print(concat(x_0))
+print('---- found solution in %d iterations ------' % k)
+print(concat(x))
 
 

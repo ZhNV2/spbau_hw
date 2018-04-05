@@ -1,5 +1,10 @@
+import matplotlib.pyplot as plt
 import sys
+import math
 import random
+
+
+#------------- from previous tasks --------------#
 
 EPS = 1e-12
 
@@ -7,19 +12,6 @@ def terminate(msg):
 	print('program finished with error:')
 	print(msg)
 	exit()
-
-def read(filename):
-	lines = []
-	with open(filename) as input_data_file:
-		lines = input_data_file.readlines()
-	n = len(lines)
-	A = []
-	b = []
-	for line in lines:
-		lst = list(map(float, line.split()))
-		A.append(lst[:len(lst) - 1])
-		b.append(lst[-1])
-	return n, A, b
 
 def e(n):
 	return [[1 if i == j else 0 for j in range(n)] for i in range(n)]
@@ -65,9 +57,9 @@ def print_solution(x):
 
 
 def solve(n, A, b, full_mode):
-	if full_mode:
-		print('---------- algorithm starts from system ----------')
-		print_system(A, b)
+	#if full_mode:
+	print('---------- algorithm starts from system ----------')
+	print_system(A, b)
 	A = [[A[i][j] for j in range(len(A[i]))] for i in range(len(b))]
 	b = [b[i] for i in range(len(b))]
 	for i in range(n):
@@ -132,7 +124,7 @@ def norm_A(n, A):
 	return max([sum([abs(A[i][j]) for i in range(n)]) for j in range(n)])
 
 def make_noise(x):
-	return x + random.randint(-2, 2) * x / 100.
+	return x + random.randint(-4, 4) * x / 100.
 	
 def noise(n, A, b, x, noise_experiments, full_mode):
 	A_changes = []
@@ -174,22 +166,136 @@ def noise(n, A, b, x, noise_experiments, full_mode):
 	print("avg A relative change = %.5f, avg x relative change = %.5f, avg sensitivity = %.5f" % (avg_A_change, avg_x_change, avg_sensitivity))
 	print("min A relative change = %.5f, min x relative change = %.5f, min sensitivity = %.5f" % (min_A_change, min_x_change, min_sensitivity))
 
+	
+
+#------------- functions for current task --------------#
+
+def process_command_line_args():
+	filename, full_mode, m, equal_weights, phi, plot = None, False, None, False, None, False
+	for arg in sys.argv[1:]:
+		if arg == '-f' or arg == '--full':
+			full_mode = True
+		elif arg == '-p' or arg == '--plot':
+			plot = True
+		elif arg.startswith('--deg='):
+			m = int(arg[6:])
+		elif arg == '-e' or arg == '--equal_weights':
+			equal_weights = True
+		elif arg.startswith('--poly='):
+			pol = arg[7:]
+			if pol == 'standard':
+				phi = standard
+			elif pol == 'legendre':
+				phi = legendre
+			else:
+				terminate('unexpected polynomials')
+		elif arg.startswith('--input='):
+			filename = arg[8:]
+		else:
+			terminate('unexpected %s arg was specified' % arg)
+	if filename is None:
+		terminate('specify file with input')
+	if m is None:
+		terminate('specify polinomial degree')
+	if phi is None:
+		terminate('specify basis polynomials')
+	return filename, full_mode, m, equal_weights, phi, plot
 
 
-if len(sys.argv) < 2:
-	terminate('specify input file as first arg')
-filename = sys.argv[1]
-full_mode, noise_experiments = False, 0
-for arg in sys.argv[2:]:
-	if arg == '--full':
-		full_mode = True
-	elif arg.startswith('--noise'):
-		noise_experiments = int(arg[7:])
-	else:
-		terminate('unexpected arg was specified')
-n, A, b = read(filename)
-x = solve(n, A, b, full_mode)
-if noise_experiments == 0:
-	print_solution(x)
-else:
-	noise(n, A, b, x, noise_experiments, full_mode)
+def read(filename):
+	tokens = []
+	with open(filename) as input_data_file:
+		tokens = input_data_file.read().split()
+	pos = 0
+	n = int(tokens[pos])
+	pos += 1
+	X, Y = [], []
+	p = [1] * n
+	for _ in range(n):
+		X.append(float(tokens[pos]))
+		pos += 1
+	for _ in range(n):
+		Y.append(float(tokens[pos]))
+		pos += 1
+	while pos < len(tokens):
+		p[int(tokens[pos])] = float(tokens[pos + 1])
+		pos += 2
+	return n, X, Y, p
+
+def standard(n, x, a_, b_):
+	return x ** n
+
+def legendre(n, x, a_, b_):
+	x = 1.0 * (2 * x - (a_ + b_)) / (b_ - a_)
+	v = [1] * max(3, n + 1)
+	v[1] = x
+	for i in range(1, n):
+		v[i + 1] = 1.0 * ((2 * i + 1) * x * v[i] - i * v[i - 1]) / (i + 1)
+	return v[n]
+
+def build_system(p, X, Y, n, m, phi, a_, b_):
+	A = [[0 for _ in range(m + 1)] for _ in range(m + 1)]
+	b = [0 for _ in range(m + 1)]
+
+	for k in range(m + 1):
+		for j in range(m + 1):
+			for i in range(n):
+				A[k][j] += p[i] * phi(j, X[i], a_, b_) * phi(k, X[i], a_, b_)
+		for i in range(n):
+			b[k] += p[i] * Y[i] * phi(k, X[i], a_, b_)
+	return A, b
+
+def deviations(X, Y, P):
+	min_dev = 10 ** 20
+	max_dev = -10 ** 20
+	sum_dev = 0
+	for i in range(n):
+		dev = abs(Y[i] - P[i])
+		min_dev = min(min_dev, dev)
+		max_dev = max(max_dev, dev)
+		sum_dev += dev
+	return min_dev, max_dev, 1.0 * sum_dev / len(X)
+
+
+#------------- main --------------#
+
+filename, full_mode, m, equal_weights, phi, plot = process_command_line_args()
+n, X, Y, p = read(filename)
+a_, b_ = min(X), max(X)
+if equal_weights:
+	p = [1] * n
+if full_mode:
+	print("---- input data ----")
+	print('n = %d, m = %d' % (n, m))
+	print('X =', X)
+	print('Y =', Y)
+	print('p =', p)
+
+A, b = build_system(p, X, Y, n, m, phi, a_, b_)
+
+a = solve(m + 1, A, b, full_mode)
+print('--------- result polynomial:----------')
+print('%fphi_{0}' % a[0], end = '')
+for i in range(1, m + 1):
+	print('+ %fphi_{%d}' % (a[i], i), end = '')
+print()
+
+noise(m + 1, A, b, a, 10, full_mode)
+
+
+P = [sum([a[j] * phi(j, x, a_, b_) for j in range(m + 1)]) for x in X]
+
+
+print('--------- deviations ----------')
+min_dev, max_dev, avg_dev = deviations(X, Y, P)
+print('min = %.15f' % min_dev)
+print('max = %.15f' % max_dev)
+print('avg = %.15f' % avg_dev)
+
+if plot:
+	plt.plot(range(0, n), Y, color = 'blue') 
+	plt.plot(range(0, n), P, color = 'orange')
+	plt.show()
+
+
+

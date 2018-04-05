@@ -1,0 +1,218 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Short Sectioned Assignment
+% LaTeX Template
+% Version 1.0 (5/5/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Original author:
+% Frits Wenneker (http://www.howtotex.com)
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[paper=a4, fontsize=11pt]{scrartcl} % A4 paper and 11pt font size
+
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+\usepackage{fourier} % Use the Adobe Utopia font for the document - comment this line to return to the LaTeX default
+\usepackage[english,russian]{babel} % English language/hyphenation
+\usepackage{amsmath,amsfonts,amsthm} % Math packages
+\usepackage[utf8]{inputenc}
+
+\usepackage{lipsum} % Used for inserting dummy 'Lorem ipsum' text into the template
+
+\usepackage{sectsty} % Allows customizing section commands
+\allsectionsfont{\centering \normalfont\scshape} % Make all sections centered, the default font and small caps
+
+\usepackage{fancyhdr} % Custom headers and footers
+\pagestyle{fancyplain} % Makes all pages in the document conform to the custom headers and footers
+\fancyhead{} % No page header - if you want one, create it in the same way as the footers below
+\fancyfoot[L]{} % Empty left footer
+\fancyfoot[C]{} % Empty center footer
+\fancyfoot[R]{\thepage} % Page numbering for right footer
+\renewcommand{\headrulewidth}{0pt} % Remove header underlines
+\renewcommand{\footrulewidth}{0pt} % Remove footer underlines
+\setlength{\headheight}{13.6pt} % Customize the height of the header
+
+\numberwithin{equation}{section} % Number equations within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{figure}{section} % Number figures within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{table}{section} % Number tables within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+
+\setlength\parindent{0pt} % Removes all indentation from paragraphs - comment this line for an assignment with lots of text
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\newcommand{\horrule}[1]{\rule{\linewidth}{#1}} % Create horizontal rule command with 1 argument of height
+
+\title{	
+\normalfont \normalsize 
+\textsc{Академический университет} \\ [25pt] % Your university, school and/or department name(s)
+\horrule{0.5pt} \\[0.4cm] % Thin top horizontal rule
+\huge Сравнение метода Зейделя и градиентного спуска \\ % The assignment title
+\horrule{2pt} \\[0.5cm] % Thick bottom horizontal rule
+}
+
+\author{Николай Жидков} % Your name
+
+\date{\normalsize\today} % Today's date or a custom date
+
+\begin{document}
+
+\maketitle % Print the title
+%----------------------------------------------------------------------------------------
+%	Использование структуры матрциы
+%----------------------------------------------------------------------------------------
+
+\section{Использование структуры матрциы}
+
+Так как наша матрица представляет собой несколько блоков, идущих по центру, а все остальные элементы равны 0, то сразу сохраним матрицу как набор этих блоков. Дальше можно заметить что оба исследуемых метода используют при пересчете только базовые операции +, -, домножение на константу, и умножение на блочную матрицу $A$. Из этого можно сделать вывод, что можно сразу решать задачу по блоком, а потом просто соединить ответ. Соответсвенно, в программе везде $n$ - это лист из размерностей блоков, $A$ - список блоков и так далее. Мы для каждого блока делаем свои преобразования и считаем, когда разница между соседними глобальными(!) $x_k$ и $x_{k+1}$ станет меньше $eps$.
+
+%----------------------------------------------------------------------------------------
+%	Структура программы
+%----------------------------------------------------------------------------------------
+
+\section{Структура программы}
+
+Программа разделена на функции, записанные в файле solve.py. Основных функций 3, остальные должны быть понятны из названий
+
+\begin{itemize}
+	\item $read(filename)$, функция чтения:
+		\begin{itemize}
+		\item Принимает название файла для чтения данных
+		\item Возвращает лист размерностей $n$, лист блоков $A$, лист желаемых решений $x_s$ и лист желаемых начальных точек $x_0$.
+		\end{itemize}
+	\item $seidel(n, A, x_s, x_0, eps, full\_mode)$, находит решение методом Зейделя:
+		\begin{itemize}
+		\item Принимает  лист размерностей $n$, лист блоков $A$, лист желаемых решений $x_s$ и лист желаемых начальных точек $x_0$, минимальную норму между соседями $eps$ и флаг дебажного вывода
+		\item Возвращает лист решений для каждого блока
+		\end{itemize}
+    \item $grad(n, A, x_s, x_0, eps, full\_mode)$, находит решение градиентным спуском:
+        \begin{itemize}
+		\item Принимает  лист размерностей $n$, лист блоков $A$, лист желаемых решений $x_s$ и лист желаемых начальных точек $x_0$, минимальную норму между соседями $eps$ и флаг дебажного вывода
+		\item Возвращает лист решений для каждого блока
+		\end{itemize}
+\end{itemize}
+
+
+%----------------------------------------------------------------------------------------
+%	Структура файлов исходных данных
+%----------------------------------------------------------------------------------------
+
+\section{Структура файлов исходных данных}
+
+Первые $n$ строк входного файла описывают матрицу $A$. Строка i имеет следующую структуру: $A_{i,0}, A_{i,1},..., A_{i,n - 1}$. 
+$n+1$-ая строка содержит желаемый вектор решения $x^*$ в формате $x^*_{0}, ..., x^*_{n - 1}$.
+$n+1$-ая строка содержит желаемый стартовый вектор $x0$ в формате $x0_{0}, ..., x0_{n - 1}$
+
+
+
+Пример содержимого файла для системы третьего порядка:
+
+\begin{flushleft} 
+1\ 2\ 3\\
+4\ 5\ 5\\
+7\ 8\ 10\\
+12\ 3\ -5\\
+17\ -2\ 40\\
+\end{flushleft}
+
+%----------------------------------------------------------------------------------------
+%	Примеры вызова из командной строки
+%----------------------------------------------------------------------------------------
+
+\section{Примеры вызова из командной строки}
+
+\begin{itemize}
+	\item Запуск, выводится только ответ (файл с входными данными обязательно указывать первым параметром!) методом Зейделя (метод тоже обязательно надо указать)
+	\subitem python3 solve.py input.txt --method==seidel
+    
+    \item Запуск, выводится только ответ (файл с входными данными обязательно указывать первым параметром!) методом градиентного спуска
+	\subitem python3 solve.py input.txt --method==grad
+
+	\item Запуск, выводится вся дебаг информация
+	\subitem python3 solve.py input.txt --method==grad –full
+
+	\item Запуск с заданным eps
+	\subitem python3 solve.py input.txt --method==seidel --eps=0.001
+
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+%	Численый эксперимент
+%----------------------------------------------------------------------------------------
+
+\section{Численный эксперимент}
+
+Везде использовался вектор $x*=[1, 2, -3, -4, 5, 6, -7, -8, 9, -10]$
+
+Далее приведены таблички для разных стартовых точек $X_0$
+
+$X_0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]$
+
+\begin{tabular}{|p{3 cm}|p{4 cm}|p{4 cm}|}
+\hline
+	Заданный eps (\%) & Итерации метода Зейделя (\%) & Итерации градиентного спуска\\
+\hline
+	1e-2 & 18 & 28\\
+\hline
+	1e-3 & 28 & 34\\
+\hline
+	1e-4 & 38 & 48\\
+\hline
+	1e-5 & 49 & 63\\
+\hline
+	1e-6 & 59 & 70\\
+    
+\hline
+\end{tabular}
+
+$X_0 = [10, -3, 5, 17, -0.1, 0.2, 7, 20, 10, 0]$
+
+\begin{tabular}{|p{3 cm}|p{4 cm}|p{4 cm}|}
+\hline
+	Заданный eps (\%) & Итерации метода Зейделя (\%) & Итерации градиентного спуска\\
+\hline
+	1e-2 & 22 & 34\\
+\hline
+	1e-3 & 32 & 48\\
+\hline
+	1e-4 & 43 & 62\\
+\hline
+	1e-5 & 53 & 76\\
+\hline
+	1e-6 & 63 & 92\\
+   \end{tabular}
+    
+$X_0 = [0, 1, 2, 4, 8, 16, 32, 64, 128, 256]$
+
+\begin{tabular}{|p{3 cm}|p{4 cm}|p{4 cm}|}
+\hline
+	Заданный eps (\%) & Итерации метода Зейделя (\%) & Итерации градиентного спуска\\
+\hline
+	1e-2 & 15 & 41\\
+\hline
+	1e-3 & 25 & 50\\
+\hline
+	1e-4 & 35 & 60\\
+\hline
+	1e-5 & 46 & 70\\
+\hline
+	1e-6 & 56 & 85\\
+    
+\end{tabular}
+
+\subsection{Выводы}
+Как видно из результатов при выборе разных $X_0$ метод Зейделя оказывается неизменно немного лучше метода градиентного спуска для данной матрицы $A$.
+
+
+\end{document}
+

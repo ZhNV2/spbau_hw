@@ -1,0 +1,216 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Short Sectioned Assignment
+% LaTeX Template
+% Version 1.0 (5/5/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Original author:
+% Frits Wenneker (http://www.howtotex.com)
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[paper=a4, fontsize=11pt]{scrartcl} % A4 paper and 11pt font size
+
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+\usepackage{fourier} % Use the Adobe Utopia font for the document - comment this line to return to the LaTeX default
+\usepackage[english,russian]{babel} % English language/hyphenation
+\usepackage{amsmath,amsfonts,amsthm} % Math packages
+\usepackage[utf8]{inputenc}
+
+\usepackage{lipsum} % Used for inserting dummy 'Lorem ipsum' text into the template
+
+\usepackage{sectsty} % Allows customizing section commands
+\allsectionsfont{\centering \normalfont\scshape} % Make all sections centered, the default font and small caps
+
+\usepackage{fancyhdr} % Custom headers and footers
+\pagestyle{fancyplain} % Makes all pages in the document conform to the custom headers and footers
+\fancyhead{} % No page header - if you want one, create it in the same way as the footers below
+\fancyfoot[L]{} % Empty left footer
+\fancyfoot[C]{} % Empty center footer
+\fancyfoot[R]{\thepage} % Page numbering for right footer
+\renewcommand{\headrulewidth}{0pt} % Remove header underlines
+\renewcommand{\footrulewidth}{0pt} % Remove footer underlines
+\setlength{\headheight}{13.6pt} % Customize the height of the header
+
+\numberwithin{equation}{section} % Number equations within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{figure}{section} % Number figures within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{table}{section} % Number tables within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+
+\setlength\parindent{0pt} % Removes all indentation from paragraphs - comment this line for an assignment with lots of text
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\newcommand{\horrule}[1]{\rule{\linewidth}{#1}} % Create horizontal rule command with 1 argument of height
+
+\title{	
+\normalfont \normalsize 
+\textsc{Академический университет} \\ [25pt] % Your university, school and/or department name(s)
+\horrule{0.5pt} \\[0.4cm] % Thin top horizontal rule
+\huge Решение СЛАУ методом LDU-разложения  \\ % The assignment title
+\horrule{2pt} \\[0.5cm] % Thick bottom horizontal rule
+}
+
+\author{Николай Жидков} % Your name
+
+\date{\normalsize\today} % Today's date or a custom date
+
+\begin{document}
+
+\maketitle % Print the title
+
+%----------------------------------------------------------------------------------------
+%	Структура программы
+%----------------------------------------------------------------------------------------
+
+\section{Структура программы}
+
+Программа разделена на функции, записанные в файле solve.py. Основных функций 3, остальные должны быть понятны из названий
+
+\begin{itemize}
+	\item $read(f ilename)$, функция чтения:
+		\begin{itemize}
+		\item Принимает название файла для чтения данных
+		\item Возвращает размерность $n$, матрицу $A$ и столбец $b$.
+		\end{itemize}
+	\item $solve(n,A,b,full\_mode)$, решаетСЛАУ:
+		\begin{itemize}
+		\item Принимает размерность $n$, матрицу $A$, столбец $b$, включен ли режим по-
+дробного вывода
+		\item Возвращает решение системы $Ax = b$.
+		\end{itemize}
+    \item $noise(n,A,b,x,noise\_experiments,full\_mode)$, проводит численный эксперимент:
+        \begin{itemize}
+		\item Принимает размерность $n$, матрицу $A$, столбец $b$, столбец решений $x$, количество повторений эксперимента, включен ли режим подробного вывода
+		\item Выписывает все результаты в $stdout$.
+		\end{itemize}
+\end{itemize}
+
+
+%----------------------------------------------------------------------------------------
+%	Структура файлов исходных данных
+%----------------------------------------------------------------------------------------
+
+\section{Структура файлов исходных данных}
+
+Исходные данные вводятся из файла, состоящего их $n$ строк, числа на строках раз- деляются пробелами. Строка i имеет следующую структуру: $A_{i,0}, A_{i,1},..., A_{i,n}, b_{i}$. Пример содержимого файла для системы третьего порядка:
+
+Пример содержимого файла для системы третьего порядка:
+
+\begin{flushleft} 
+1\ 2\ 3\ 4\\
+4\ 5\ 6\ 5\\
+7\ 8\ 9\ 10\\
+\end{flushleft}
+
+%----------------------------------------------------------------------------------------
+%	Примеры вызова из командной строки
+%----------------------------------------------------------------------------------------
+
+\section{Примеры вызова из командной строки}
+
+\begin{itemize}
+	\item Решение СЛАУ, выводится только ответ (файл с входными данными обяза- тельно указывать первым параметром!)
+	\subitem python3 solve.py input.txt
+
+	\item Решение СЛАУ, выводится вся дебаг информация
+	\subitem python3 solve.py input.txt –full
+
+	\item Численный эксперимент (в примере проводятся 10)
+	\subitem python3 solve.py input.txt –noise10
+
+	\item Численный эксперимент со всей дебаг информацией
+	\subitem python3 solve.py input.txt –noise10 –full
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+%	Тесты
+%----------------------------------------------------------------------------------------
+
+\section{Тесты}
+
+\begin{itemize}
+	\item Файл вида nxn.txt — тест нормального выполнения алгоритма, все условия применимости выполнены (выданы преподавателем).
+    
+	\item Файл det0.txt — тест аварийного завершения (определитель системы 0)
+
+	\item Файл swap.txt — тест проверки работы алгоритма при необходимости переста- новок
+
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+%	Численый эксперимент
+%----------------------------------------------------------------------------------------
+
+\section{Численный эксперимент}
+
+\subsection{Результаты на СЛАУ 6x6}
+Решение:
+
+$X = [-0.3,-0.6, 0.8, -1, 0.1, 0.1]$
+\\
+\\
+Число проведенных расчетов: $100$
+\\
+\\
+\begin{tabular}{|p{3 cm}|p{4 cm}|p{4 cm}|p{3.5 cm}|}
+\hline
+	& Возмущение матрицы (\%) & Возмущение вектора (\%) & Чувствительность решения\\
+\hline
+	максимальное & 1.94037 & 36206.79105 & 20474.26305\\
+\hline
+	среднее & 1.22290 & 1317.72694 & 1063.74436\\
+\hline
+	минимальное & 0.21984 & 95.66139 & 68.31059\\
+\hline
+\end{tabular}
+
+\subsection{Результаты на СЛАУ 7x7}
+Решение:
+
+$X = [0, 1.1, 0.8, -1, 0, -0.1, 1.3]$
+
+Число проведенных расчетов: $100$
+\\
+\\
+\begin{tabular}{|p{3 cm}|p{4 cm}|p{4 cm}|p{3.5 cm}|}
+\hline
+	& Возмущение матрицы (\%) & Возмущение вектора (\%) & Чувствительность решения\\
+\hline
+	максимальное & 1.84549 & 19.75074 & 14.48756\\
+\hline
+	среднее & 1.36498 & 6.32435 & 4.70873\\
+\hline
+	минимальное & 0.96996 & 1.24472 & 0.95089\\
+\hline
+\end{tabular}
+
+\subsection{Выводы}
+\begin{itemize}
+\item Решение СЛАУ 1 мало сильно чувствительна к возмущениям.
+\subitem Матрица имеет слишком большое число обусловленности, надо с помощью методов с пары привести систему к эквивалентной с меньшим числом обусловленности
+
+\item Решение СЛАУ 2 слабо чувствительно к возмущениям.
+\subitem Рекомендации
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+%	Замечание
+%----------------------------------------------------------------------------------------
+
+\section{Замечание}
+
+Данный алгоритм LDR-разложения был адаптирован с алгоритма LU-разложения, рассказанного на паре, вместе с перестановкой строк при необходимости. Получилось, что в худшем случае, если на каждом шаге $d_{i,i}=0$ и мы будем пытаться ставить каждую строку на место $i$-ой, то время работы будет $O(n^4)$. В реальности такой контртест подобрать сложно, поэтому почти всегда алгоритм работает нужные $O(n^3)$. Если все-таки нужен алгоритм за $O(n^4)$ в любом случае, то напишите, я подумаю, можно ли все-таки оптмизировать.
+
+\end{document}
+

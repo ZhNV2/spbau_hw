@@ -68,58 +68,53 @@ def solve(n, A, b, full_mode):
 	if full_mode:
 		print('---------- algorithm starts from system ----------')
 		print_system(A, b)
-	A = [[A[i][j] for j in range(len(A[i]))] for i in range(len(b))]
-	b = [b[i] for i in range(len(b))]
+	l = e(n)
+	A = [[A[i][j] for j in range(n)] for i in range(n)]
+	d = [[0 for _ in range(n)] for _ in range(n)]
+	u = e(n)
 	for i in range(n):
-		x = [A[i][j] for j in range(i, n)]
-		T = e(n - i)
-		s = A[i][i]
-		if abs(A[i][i]) < EPS:
-			swaped = False;
-			if full_mode:
-				print("A[%d][%d] = 0, trying to swap rows" % (i, i))
-			for j in range(i + 1, n):
-				if abs(A[j][i]) > EPS:
-					if full_mode:
-						print("swapping rows %d and %d" % (i, j))
-					A[i], A[j] = A[j], A[i]
-					b[i], b[j] = b[j], b[i]
-					swaped = True
-					break
-			if not swaped:
-				terminate('det A = 0')
-		for j in range(i + 1, n):
-			if abs(A[j][i]) < EPS:
-				continue
-			tg = A[j][i] / (s + 0.)
-			cos = (1 / (1 + tg ** 2)) ** 0.5
-			sin = (1 - cos ** 2) ** 0.5
-			if tg < 0:
-				sin *= -1
-			tmp = t(n - i, 0, j - i, cos, sin)
-			if full_mode:
-				print("setting A[%d][%d] to zero, A[%d][%d] = %.3f, tg = %.3f, sin = %.3f, cos = %.3f" 
-					% (j, i, i, i, s, tg, sin, cos))
-			s = s * cos + sin * A[j][i]
-			T = mul(n - i, tmp, T)
-		P = e(n)
-		for i1 in range(n - i):
-			for j1 in range(n - i):
-				P[i + i1][i + j1] = T[i1][j1]
-		
-		A = mul(n, P, A)
-		b = mul_v(n, P, b)
+		to_swap = -1
+		for j in range(i, n):
 
-		if full_mode:
-			print("--------- after setting %d-s column to zero, getting system -------" % i)
-			print_system(A, b)
-	
-	x = [0 for i in range(n)]
-	for i in range(n - 1, -1, -1):
-		x[i] = b[i]
+			for t in range(0, i):
+				l[i][t] = A[j][t]
+				for k in range(t):
+					l[i][t] -= l[i][k] * d[k][k] * u[k][t]
+				l[i][t] /= d[t][t]
+			d[i][i] = A[j][i]
+			for k in range(i):
+				d[i][i] -= l[i][k] * d[k][k] * u[k][i]
+
+			if abs(d[i][i]) > EPS:
+				to_swap = j
+				break
+		if to_swap == -1:
+			terminate('det A = 0')
+		elif i != to_swap:
+			A[i], A[to_swap] = A[to_swap], A[i]
+			b[i], b[to_swap] = b[to_swap], b[i]
+			if full_mode:
+				print('swapping rows %d and %d' % (i, to_swap))
+		
 		for j in range(i + 1, n):
-			x[i] -= A[i][j] * x[j]
-		x[i] /= A[i][i]
+			sum = 0
+			for k in range(0, i):
+				sum += l[i][k] * d[k][k] * u[k][j]
+			u[i][j] = (A[i][j] - sum) / d[i][i]
+		
+	
+	x1 = [0] * n
+	x = [0] * n
+	for i in range(n):
+		x1[i] = b[i]
+		for j in range(i):
+			x1[i] -= l[i][j] * x1[j]
+	for i in range(n):
+		x1[i] /= d[i][i]
+	for i in range(n - 1, -1, -1):
+		x[i] = x1[i]
+		for j in range(i + 1, n):
+			x[i] -= u[i][j] * x[j]
 
 	if full_mode:
 		print_solution(x)
@@ -140,10 +135,6 @@ def noise(n, A, b, x, noise_experiments, full_mode):
 	sensitivity = []
 	for tmp in range(noise_experiments):
 		CA = [[make_noise(A[i][j]) for j in range(n)] for i in range(n)]
-		deltaA = [[abs(A[i][j] - CA[i][j]) / A[i][j] for j in range(n)] for i in range(n)]
-		if full_mode:
-			print('-------noise matrix')
-			print_system(deltaA, b)
 		Cb = [b[i] for i in range(len(b))]
 		if full_mode:
 			print("--- experiment #%d, system is" % (tmp + 1))

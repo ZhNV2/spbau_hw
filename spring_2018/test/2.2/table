@@ -1,0 +1,19 @@
+TEST CASES
+case	P1	P2	P3	P4	pairings
+1	A	F	K	N	6
+2	A	G	L	O	6
+3	B	F	L	N	5
+4	B	G	K	O	5
+5	C	F	M	O	6
+6	C	G	M	N	5
+7	D	H	K	N	5
+8	D	H	L	O	4
+9	E	H	M	N	4
+10	E	F	K	O	3
+11	A	H	M	~O	2
+12	B	H	M	~N	2
+13	C	H	L	~N	2
+14	D	G	M	~N	2
+15	E	G	L	~N	2
+16	C	~F	K	~O	1
+17	D	F	~L	~O	1

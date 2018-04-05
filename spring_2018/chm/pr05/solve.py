@@ -1,5 +1,10 @@
+import matplotlib.pyplot as plt
 import sys
+import math
 import random
+
+
+#------------- from previous tasks --------------#
 
 EPS = 1e-12
 
@@ -7,19 +12,6 @@ def terminate(msg):
 	print('program finished with error:')
 	print(msg)
 	exit()
-
-def read(filename):
-	lines = []
-	with open(filename) as input_data_file:
-		lines = input_data_file.readlines()
-	n = len(lines)
-	A = []
-	b = []
-	for line in lines:
-		lst = list(map(float, line.split()))
-		A.append(lst[:len(lst) - 1])
-		b.append(lst[-1])
-	return n, A, b
 
 def e(n):
 	return [[1 if i == j else 0 for j in range(n)] for i in range(n)]
@@ -68,62 +60,58 @@ def solve(n, A, b, full_mode):
 	if full_mode:
 		print('---------- algorithm starts from system ----------')
 		print_system(A, b)
-	A = [[A[i][j] for j in range(len(A[i]))] for i in range(len(b))]
-	b = [b[i] for i in range(len(b))]
+	l = e(n)
+	A = [[A[i][j] for j in range(n)] for i in range(n)]
+	d = [[0 for _ in range(n)] for _ in range(n)]
+	u = e(n)
 	for i in range(n):
-		x = [A[i][j] for j in range(i, n)]
-		T = e(n - i)
-		s = A[i][i]
-		if abs(A[i][i]) < EPS:
-			swaped = False;
-			if full_mode:
-				print("A[%d][%d] = 0, trying to swap rows" % (i, i))
-			for j in range(i + 1, n):
-				if abs(A[j][i]) > EPS:
-					if full_mode:
-						print("swapping rows %d and %d" % (i, j))
-					A[i], A[j] = A[j], A[i]
-					b[i], b[j] = b[j], b[i]
-					swaped = True
-					break
-			if not swaped:
-				terminate('det A = 0')
-		for j in range(i + 1, n):
-			if abs(A[j][i]) < EPS:
-				continue
-			tg = A[j][i] / (s + 0.)
-			cos = (1 / (1 + tg ** 2)) ** 0.5
-			sin = (1 - cos ** 2) ** 0.5
-			if tg < 0:
-				sin *= -1
-			tmp = t(n - i, 0, j - i, cos, sin)
-			if full_mode:
-				print("setting A[%d][%d] to zero, A[%d][%d] = %.3f, tg = %.3f, sin = %.3f, cos = %.3f" 
-					% (j, i, i, i, s, tg, sin, cos))
-			s = s * cos + sin * A[j][i]
-			T = mul(n - i, tmp, T)
-		P = e(n)
-		for i1 in range(n - i):
-			for j1 in range(n - i):
-				P[i + i1][i + j1] = T[i1][j1]
-		
-		A = mul(n, P, A)
-		b = mul_v(n, P, b)
+		to_swap = -1
+		for j in range(i, n):
 
-		if full_mode:
-			print("--------- after setting %d-s column to zero, getting system -------" % i)
-			print_system(A, b)
-	
-	x = [0 for i in range(n)]
-	for i in range(n - 1, -1, -1):
-		x[i] = b[i]
+			for t in range(0, i):
+				l[i][t] = A[j][t]
+				for k in range(t):
+					l[i][t] -= l[i][k] * d[k][k] * u[k][t]
+				l[i][t] /= d[t][t]
+			d[i][i] = A[j][i]
+			for k in range(i):
+				d[i][i] -= l[i][k] * d[k][k] * u[k][i]
+
+			if abs(d[i][i]) > EPS:
+				to_swap = j
+				break
+		if to_swap == -1:
+			terminate('det A = 0')
+		elif i != to_swap:
+			A[i], A[to_swap] = A[to_swap], A[i]
+			b[i], b[to_swap] = b[to_swap], b[i]
+			if full_mode:
+				print('swapping rows %d and %d' % (i, to_swap))
+		
 		for j in range(i + 1, n):
-			x[i] -= A[i][j] * x[j]
-		x[i] /= A[i][i]
+			sum = 0
+			for k in range(0, i):
+				sum += l[i][k] * d[k][k] * u[k][j]
+			u[i][j] = (A[i][j] - sum) / d[i][i]
+		
+	
+	x1 = [0] * n
+	x = [0] * n
+	for i in range(n):
+		x1[i] = b[i]
+		for j in range(i):
+			x1[i] -= l[i][j] * x1[j]
+	for i in range(n):
+		x1[i] /= d[i][i]
+	for i in range(n - 1, -1, -1):
+		x[i] = x1[i]
+		for j in range(i + 1, n):
+			x[i] -= u[i][j] * x[j]
 
 	if full_mode:
 		print_solution(x)
 	return x
+
 
 def norm_v(n, x):
 	return sum([abs(t) for t in x])
@@ -132,7 +120,7 @@ def norm_A(n, A):
 	return max([sum([abs(A[i][j]) for i in range(n)]) for j in range(n)])
 
 def make_noise(x):
-	return x + random.randint(-2, 2) * x / 100.
+	return x + random.randint(-4, 4) * x / 100.
 	
 def noise(n, A, b, x, noise_experiments, full_mode):
 	A_changes = []
@@ -174,22 +162,74 @@ def noise(n, A, b, x, noise_experiments, full_mode):
 	print("avg A relative change = %.5f, avg x relative change = %.5f, avg sensitivity = %.5f" % (avg_A_change, avg_x_change, avg_sensitivity))
 	print("min A relative change = %.5f, min x relative change = %.5f, min sensitivity = %.5f" % (min_A_change, min_x_change, min_sensitivity))
 
+	
+
+#------------- functions for current task --------------#
 
 
-if len(sys.argv) < 2:
-	terminate('specify input file as first arg')
-filename = sys.argv[1]
-full_mode, noise_experiments = False, 0
-for arg in sys.argv[2:]:
-	if arg == '--full':
-		full_mode = True
-	elif arg.startswith('--noise'):
-		noise_experiments = int(arg[7:])
-	else:
-		terminate('unexpected arg was specified')
-n, A, b = read(filename)
-x = solve(n, A, b, full_mode)
-if noise_experiments == 0:
-	print_solution(x)
-else:
-	noise(n, A, b, x, noise_experiments, full_mode)
+def deviations(X, Y, P):
+	min_dev = 10 ** 20
+	max_dev = -10 ** 20
+	sum_dev = 0
+	for i in range(len(X)):
+		dev = abs(Y[i] - P[i])
+		min_dev = min(min_dev, dev)
+		max_dev = max(max_dev, dev)
+		sum_dev += dev
+	return min_dev, max_dev, 1.0 * sum_dev / len(X)
+
+
+#------------- main --------------#
+
+def f(x):
+ 	return x ** 0.5 - math.cos(5 * x)
+
+
+def noiseY(x):
+	return x + random.randint(-4, -4) * x / 100.
+
+n = 10
+a, b = 1, 3
+
+X = [a + i * (b - a + 0.) / n for i in range(n + 1)]
+X = [(a + b) / 2.  + (b - a) / 2. * (math.cos((2 * k - 1) * math.pi / 2. / (n + 1))) for k in range(1, n + 2)]
+
+Y = [f(x) for x in X]
+#Y = [noiseY(y) for y in Y]
+
+testN = 50
+testX = [a + i * (b - a + 0.) / testN for i in range(testN + 1)]
+testY = [f(x) for x in testX]
+#testY = [noiseY(f(x)) for x in testX] 
+
+A = [[0 for i in range(n + 1)] for j in range(n + 1)]
+for i in range(n + 1):
+	for j in range(n + 1):
+		A[i][j] = X[i] ** (n - j)
+a = solve(n + 1, A, Y, False)
+
+
+print('--------- result polynomial:----------')
+for i in range(0, n + 1):
+	print('%fx^{%d}' % (a[i], n - i), end = '')
+	if i != n:
+		print('+', end = '')
+print()
+
+
+
+testP = [sum([a[j] * (x ** (n - j)) for j in range(n + 1)]) for x in testX]
+
+
+print('--------- deviations ----------')
+min_dev, max_dev, avg_dev = deviations(testX, testY, testP)
+print('min = %.15f' % min_dev)
+print('max = %.15f' % max_dev)
+print('avg = %.15f' % avg_dev)
+
+plt.plot(testX, testY, color = 'blue') 
+plt.plot(testX, testP, color = 'orange')
+plt.show()
+
+
+

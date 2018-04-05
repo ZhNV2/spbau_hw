@@ -1,0 +1,6 @@
+P1	P2	P3	P4
+A	F	K	N
+B	G	L	O
+C	H	M	
+D			
+E			

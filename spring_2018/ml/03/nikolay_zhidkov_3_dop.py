@@ -218,13 +218,18 @@ def drawnode(draw, tree, x, y):
 	else:
 		draw.text((x - 20, y), tree.type, (0, 0, 0))
 
-X, y = read()
-
+X_all, y_all = read()
+n = int(len(X_all) * 0.8)
+X, y = X_all[:n], y_all[:n]
+X_test, y_test = X_all[n:], y_all[n:]
 decisionTree = DecisionTree()
 decisionTree.build(X, y)
-drawtree(decisionTree.tree)
-preds = decisionTree.important_predicates('Goblin')
-print(preds)
+correct = 0
+for i in range(len(X_test)):
+	prediction = decisionTree.predict(X_test[i])
+	if prediction == y_test[i]:
+		correct += 1
+print(correct * 100 / len(X_test), end = '%')
 
 		
 
