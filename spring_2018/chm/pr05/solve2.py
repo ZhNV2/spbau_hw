@@ -181,10 +181,10 @@ def deviations(X, Y, P):
 
 #------------- main --------------#
 
+#def f(x):
+# 	return x ** 0.5 - math.cos(5 * x)
 def f(x):
- 	return x ** 0.5 - math.cos(5 * x)
-#№def f(x):
-#	return 1.0 / (1 + 25 * x * x)
+	return 1.0 / (1 + 25 * x * x)
 
 
 def noiseY(x):
@@ -199,8 +199,8 @@ def calc(a, x, X):
 		res += a[j] * pp
 	return res
 
-n = 10
-a, b = 1, 3
+n = 14
+a, b = -1, 1
 
 #X = [a + i * (b - a + 0.) / n for i in range(n + 1)]
 X = [(a + b) / 2.  + (b - a) / 2. * (math.cos((2 * k - 1) * math.pi / 2. / (n + 1))) for k in range(1, n + 2)]
@@ -209,7 +209,7 @@ X = [(a + b) / 2.  + (b - a) / 2. * (math.cos((2 * k - 1) * math.pi / 2. / (n + 
 Y = [f(x) for x in X]
 #Y = [noiseY(y) for y in Y]
 
-testN = 50
+testN = 30
 testX = [a + i * (b - a + 0.) / testN for i in range(testN + 1)]
 testY = [f(x) for x in testX]
 #testY = [noiseY(f(x)) for x in testX] 

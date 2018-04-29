@@ -1,0 +1,212 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Short Sectioned Assignment
+% LaTeX Template
+% Version 1.0 (5/5/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Original author:
+% Frits Wenneker (http://www.howtotex.com)
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[paper=a4, fontsize=11pt]{scrartcl} % A4 paper and 11pt font size
+
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+\usepackage{fourier} % Use the Adobe Utopia font for the document - comment this line to return to the LaTeX default
+\usepackage[english,russian]{babel} % English language/hyphenation
+\usepackage{amsmath,amsfonts,amsthm} % Math packages
+\usepackage[utf8]{inputenc}
+
+\usepackage{lipsum} % Used for inserting dummy 'Lorem ipsum' text into the template
+
+\usepackage{sectsty} % Allows customizing section commands
+\allsectionsfont{\centering \normalfont\scshape} % Make all sections centered, the default font and small caps
+
+\usepackage{fancyhdr} % Custom headers and footers
+\pagestyle{fancyplain} % Makes all pages in the document conform to the custom headers and footers
+\fancyhead{} % No page header - if you want one, create it in the same way as the footers below
+\fancyfoot[L]{} % Empty left footer
+\fancyfoot[C]{} % Empty center footer
+\fancyfoot[R]{\thepage} % Page numbering for right footer
+\renewcommand{\headrulewidth}{0pt} % Remove header underlines
+\renewcommand{\footrulewidth}{0pt} % Remove footer underlines
+\setlength{\headheight}{13.6pt} % Customize the height of the header
+
+\numberwithin{equation}{section} % Number equations within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{figure}{section} % Number figures within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{table}{section} % Number tables within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+
+\setlength\parindent{0pt} % Removes all indentation from paragraphs - comment this line for an assignment with lots of text
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\newcommand{\horrule}[1]{\rule{\linewidth}{#1}} % Create horizontal rule command with 1 argument of height
+
+\title{	
+\normalfont \normalsize 
+\textsc{Академический университет} \\ [25pt] % Your university, school and/or department name(s)
+\horrule{0.5pt} \\[0.4cm] % Thin top horizontal rule
+\huge Решение дифференциальных уравнений  \\ % The assignment title
+\horrule{2pt} \\[0.5cm] % Thick bottom horizontal rule
+}
+
+\author{Николай Жидков} % Your name
+
+\date{\normalsize\today} % Today's date or a custom date
+
+\begin{document}
+
+\maketitle % Print the title
+
+%----------------------------------------------------------------------------------------
+%	Предисловия
+%----------------------------------------------------------------------------------------
+
+\section{Структура программы}
+
+Во-первых, с уравнением 2-го порядка из условия что-то не так, потому что функция $y(x)$ не является решением это уравнения и под начальные условия не подходит. Поэтому я поменял условия на $y(1)=-1, y(x)=-\sqrt{x}$, так все сходится.
+
+Во-вторых, я использовал в коде в некоторый момент массивы из модуля $numpy$, потому что их можно складывать друг с другом и домножать на коэффициенты. Мне это было нужно, чтобы задачи из обоих пунктов решать одинковыми функциями.
+
+%----------------------------------------------------------------------------------------
+%	Структура программы
+%----------------------------------------------------------------------------------------
+
+\section{Структура программы}
+
+Программа разделена на функции, записанные в файле solve.py. Содержательные функции: 
+
+\begin{itemize}
+	\item $evaluate_y(a, b, n, y0, f)$, выполняет проход метода Рунге-Кутта 3-го порядка:
+		\begin{itemize}
+		\item Принимает границы отрезка $a, b$, количество отрезков $n$ (количество узлов минус один), начальное значение $y0$ и функцию $f$.
+		\item Возвращает посчитанный массив $Y$ (в первом пункте это массив значений в точках, во втором пункте это массив пар (значение, производная)).
+		\end{itemize}
+	\item $solve(a, b, f, y0, start\_n, eps, max\_n))$, запускает Рунге-Кутта с нужными параметрами:
+		\begin{itemize}
+		\item Принимает границы отрезка $a, b$, начальное значение $y0$ и функцию $f$, начальное количество отрезков $start\_n$, граничное значение для оценки Рунге $eps$ и максимальное число отрезков $max\_n$.
+		\item Вычисляет массив значений в точках, каждый раз увеличивая сетку вдвое. Останавливается, когда $n$ стало равно $max\_n$ или когда оценки Рунге на двух последовательных прогонах стала меньше $eps$ для всех значений.
+		\end{itemize}
+    \item $deviations*(Y, Y\_t, start\_n, *)$, выводит информацию по вычислениям:
+        \begin{itemize}
+		\item Принимает вычисленные значения $Y$, реальные значения $Y\_t$ и количство контрольных точек $start\_n$.
+		\item Печатает информацию об отклонениях в вычислениях.
+		\end{itemize}
+    \item $process\_command\_line\_args()$, считывет аргументы командой строки:
+        \begin{itemize}
+		\item Ничего не принимает
+		\item Возвращает метод для запуска $run$ и ее параметр $param$.
+		\end{itemize}
+    \item $test*(a, b, y0, start_n, eps, y_t, f)$, запускает вычисления для данного уравнения первого порядка:
+        \begin{itemize}
+		\item Принимает границы отрезка $a, b$, начальное значение $y0$ и функцию $f$, начальное количество отрезков $start\_n$, граничное значение для оценки Рунге $eps$ и функцию ответа $y\_t$
+		\item Проводит вычисления, печатает ответ.
+		\end{itemize}
+\end{itemize}
+
+
+%----------------------------------------------------------------------------------------
+%	Структура файлов исходных данных
+%----------------------------------------------------------------------------------------
+
+\section{Структура файлов исходных данных}
+
+В данной задаче файлы не используются.
+
+%----------------------------------------------------------------------------------------
+%	Примеры вызова из командной строки
+%----------------------------------------------------------------------------------------
+
+\section{Примеры вызова из командной строки}
+
+Есть 4 режима работы для решения задач из условия
+
+\begin{itemize}
+	\item Решаем уравнение первого порядка, ожидая порогового значения 0.001
+	\subitem $python3$ $solve.py$ $--run=1$ $--param=0.001$
+    \item Решаем уравнение второго порядка, деля интервал на 20 отрезков
+	\subitem $python3$ $solve.py$ $--run=2$ $--param=20$
+    \item Решаем уравнение второго порядка, вносим возмущение в $y(1)$ в размере 5 процентов (количество отрезков всегда 10).
+	\subitem $python3$ $solve.py$ $--run=2.1$ $--param=5$
+    \item Решаем уравнение второго порядка, вносим возмущение в $y'(1)$ в размере 5 процентов (количество отрезков всегда 10).
+	\subitem $python3$ $solve.py$ $--run=2.2$ $--param=5$
+    
+\end{itemize}
+
+
+%----------------------------------------------------------------------------------------
+%	Численый эксперимент
+%----------------------------------------------------------------------------------------
+
+\section{Численный эксперимент}
+
+\subsection{Уравнение первого порядка}
+
+\begin{tabular}{|p{4 cm}|p{4 cm}|p{4 cm}|}
+\hline
+	eps & количество отрезков & максимальное отклонение интеграла в процентах от eps \\
+\hline 
+	0.001 & 20 & 6\\
+\hline 
+	0.0001 & 40 & 8\\
+\hline
+	0.00001 & 80 & 11\\
+\hline
+\end{tabular}
+
+Как видно из таблицы, с уменьшением $eps$ на порядок, количество проходов увеличивается на 1 (что то же самое, число отрезков увеличивается вдвое). Точность, как легко видеть, падает также на порядок, что вполне ожидаемо.
+
+Довольно неожиданным только является факт, что при том, что максимальное отклонение мы разрешаем $eps$, максимальное отклонение в контрольных узлах дает лишь $10$ процентов от него.
+
+\subsection{Уравнение второго порядка, вычисление значений}
+
+\begin{tabular}{|p{4 cm}|p{4 cm}|}
+\hline
+	max n & максимальное отклонение интеграла\\
+\hline 
+	10 & 0.00000243 \\
+\hline 
+	20 & 0.00000029 \\
+\hline
+	40 & 0.00000004 \\
+\hline
+\end{tabular}
+
+Как видно, с увеличением числа узлов в два раза, максимальное отклонение падает на порядок.
+
+\subsection{Уравнение второго порядка, возмущения}
+
+В таблице записаны максимальные отклонения
+
+\begin{tabular}{|p{4 cm}|p{4 cm}|p{4 cm}|}
+\hline
+	Процент & В значение &  В производную \\
+\hline 
+	3 & 0.03 & 0.00000243\\
+\hline 
+	4 & 0.04 & 0.00463403\\
+\hline
+	5 & 0.05 & 0.01854162\\
+\hline
+\end{tabular}
+
+В левом столбце стоят значения процентов, так как при изменении начального значения на $p$ процентов, потом все значения примерно сохраняют это изменение.
+В целом видно, что производная гораздо меньше влияет на результат, что довольно логично, так изменение начального значение оказывает непосредственное влияние на дальнейшие вычисления.
+
+
+
+\end{document}
+
+
+
