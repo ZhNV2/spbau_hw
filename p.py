@@ -88,7 +88,7 @@ if scand_dir[-1] != '/':
 sent_column = 20
 i = 2
 SENT_MARK = 1
-while sheet.cell(row=i, column = ID_COLUMN).value != '':
+while str(sheet.cell(row=i, column = ID_COLUMN).value).isdigit():
     surname = sheet.cell(row=i, column=SURNAME_COLUMN).value
     name = sheet.cell(row=i, column=NAME_COLUMN).value
     receiver = sheet.cell(row=i, column=EMAIL_COLUMN).value
