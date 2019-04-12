@@ -57,7 +57,7 @@ def get_message_info(email_file):
         subject_line = efile.readline().split()
         check_email_line('Subject', 'second', subject_line)
         body = efile.read()
-    return sender_line[1], subject_line[1], body
+    return sender_line[1], ' '.join(subject_line[1:]), body
 
 
 sender, subject, body = get_message_info(email_file)
