@@ -95,7 +95,7 @@ while sheet.cell(row=i, column = ID_COLUMN).value != '':
     code = sheet.cell(row=i, column=CODE_COLUMN).value
 
     if sheet.cell(row=i, column=sent_column).value != SENT_MARK:
-        filename = str(int(code)) + '.txt'
+        filename = str(int(code)) + '.pdf'
         scan_path = scand_dir + filename
         if not os.path.isfile(scan_path):
             print('Error: no scan found found for ' + surname + ' ' + name)
