@@ -113,10 +113,7 @@ while sheet.cell(row=i, column = ID_COLUMN).value != '':
             part = MIMEBase("application", "octet-stream")
             part.set_payload(attachment.read())
         encoders.encode_base64(part)
-        part.add_header(
-            "Content-Disposition",
-            f"attachment; filename= {filename}",
-        )
+        part.add_header("Content-Disposition",f"attachment; filename={filename}")
         message.attach(part)
         text = message.as_string()
         context = ssl.create_default_context()
