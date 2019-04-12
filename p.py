@@ -105,7 +105,6 @@ while sheet.cell(row=i, column = ID_COLUMN).value != '':
         message["To"] = receiver
         message["Subject"] = subject
         message["Bcc"] = receiver
-        password = 'pomogi55'
 
         message.attach(MIMEText(body, "plain"))
         
@@ -118,9 +117,12 @@ while sheet.cell(row=i, column = ID_COLUMN).value != '':
         text = message.as_string()
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-            server.login(sender, password)
+            try:
+                server.login(sender, password)
+            except smtplib.SMTPAuthenticationError:
+                print('Error: Your email name or password is incorrect, please try again using the correct stuff')
+                sys.exit(0)
             server.sendmail(sender, receiver, text)
-
         sheet.cell(row=i, column=sent_column).value = SENT_MARK
         book.save(table_file)
         print('sent to ' + surname + ' ' + name)
